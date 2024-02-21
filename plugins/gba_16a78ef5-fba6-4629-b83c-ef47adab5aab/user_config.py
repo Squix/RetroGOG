@@ -2,10 +2,8 @@
 # example:
 # emu_path = "C:/Users/USERNAME/AppData/Roaming/RetroArch/
 
-emu_path = ""
+emu_path = "C:\RetroArch-Win64"
 
-# Enter your core DLL file here, be sure to include the file extension
-# example:
-# core = "mgba_libretro.dll"
+#enter the name of the core to retrieve play time
 
-core = ""
+core_name = "mGBA"

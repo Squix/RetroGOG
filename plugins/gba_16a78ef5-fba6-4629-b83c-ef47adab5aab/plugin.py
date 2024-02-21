@@ -19,7 +19,7 @@ class Retroarch(Plugin):
     def __init__(self, reader, writer, token):
         super().__init__(Platform.NintendoGameBoy, version, reader, writer, token)
         self.game_cache = []
-        self.playlist_path = user_config.emu_path + "playlists/Nintendo - Game Boy Advance.lpl"
+        self.playlist_path = user_config.emu_path + "/playlists/Nintendo - Game Boy Advance.lpl"
         self.proc = None
         self.game_run = ""
 
@@ -104,9 +104,21 @@ class Retroarch(Plugin):
                 playlist_dict = json.load(playlist_json)
         for entry in playlist_dict["items"]:
             if game_id == self.format_game(entry["label"]):
-                self.update_local_game_status(LocalGame(game_id, 2))
-                self.game_run = self.format_game(entry["label"])
-                self.proc = subprocess.Popen(os.path.abspath(user_config.emu_path + "retroarch.exe" + " -L \"" + user_config.emu_path + "cores/" + user_config.core + "\" \"" + entry["path"]))
+                try:
+                    self.update_local_game_status(LocalGame(game_id, 2))
+                    self.game_run = self.format_game(entry["label"])
+                    logging.debug("Starting " + self.game_run)
+                    path = os.path.abspath(user_config.emu_path + "/retroarch.exe" + " -L \"" + entry["core_path"] + "\" \"" + entry["path"] + "\"")
+                    logging.debug(path)
+                    self.proc = subprocess.Popen(path)
+                except Exception as e:
+                    logging.error("Failed to launch game: " + str(e))
+                    self.add_notification(
+                        Notification(
+                            "Error launching game",
+                            str(e)
+                        )
+                    )
                 break
 
     #imports retroarch playtime if existent. For this to work, activate "Save runtime log (aggregate)" in RetroArch settings -> Savings
@@ -120,7 +132,8 @@ class Retroarch(Plugin):
                 playlist_dict = json.load(playlist_json)
             for rom in playlist_dict["items"]:
                 if game_id == self.format_game(rom["label"]):
-                    file_path = user_config.emu_path + "/playlists/logs/" + rom["path"].rsplit("\\",1)[1].rsplit("#")[0].rsplit(".",1)[0] + ".lrtl"
+                    file_path = user_config.emu_path + "/playlists/logs/" + user_config.core_name + "/" + rom["path"].rsplit("\\",1)[1].rsplit("#")[0].rsplit(".",1)[0] + ".lrtl"
+                    logging.debug(file_path)
                     if os.path.isfile(file_path):
                         with open(file_path) as json_data:
                             time_data = json.load(json_data)
